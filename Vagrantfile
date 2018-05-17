@@ -79,7 +79,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       s2.vm.network "private_network", ip: "172.20.20.11"
       s2.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
       s2.customize ["modifyvm", :id, "--memory", 512]
-      s2.customize ["modifyvm", :id, "--name", "s2"  
+      s2.customize ["modifyvm", :id, "--name", "s2"]  
     end
   config.vm.define "s3" do |s3|
       s3.vm.provision 'shell',
@@ -88,13 +88,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       s3.vm.network "private_network", ip: "172.20.20.12"
       s3.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
       s3.customize ["modifyvm", :id, "--memory", 512]
-      s3.customize ["modifyvm", :id, "--name", "s3"  
+      s3.customize ["modifyvm", :id, "--name", "s3"]  
   end
   config.vm.define "s4" do |s4|
     s4.vm.provision 'shell',
                   inline:$script_s4
     s4.vm.hostname = "s4"
     s4.vm.network "private_network", ip: "172.20.20.13"
+    s4.customize ["modifyvm", :id, "--name", "s4"]  
+    
 
   end
 end
