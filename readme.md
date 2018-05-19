@@ -18,13 +18,20 @@ f. In S4 se instaleaza o baza de date sql (la alegere) in care vor fi inregistra
 rezultatele: ip sursa, ip destinatie, delay la fiecare hop, RTT intre fiecare server (de la S(i)
 la S(i+1), 1<=i<=4),
 ### Setup NTP server
-       S4 - NTP Controller
-      / | \
-     /  |  \
-    S1  S2  S3
+- Overview
+
+           S4 - NTP Controller
+          / | \
+         /  |  \
+        S1  S2  S3
     
-    install ntp daemon (sudo apt-get install ntp)
-    don't forget to change /etc/ntp.conf for s1,s2,s3 to  point to s4 for time sync.
+- install ntp daemon and ntpdate tool
+    - don't forget to change /etc/ntp.conf for s1,s2,s3 to  point to s4 for time sync.
+- manual sync with 
+
+```sh
+root@s1:~# date; systemctl stop ntp; ntpdate -q s4; systemctl start ntp; date;
+```
 ### Health check all the servers in real-time
 
     consul.
