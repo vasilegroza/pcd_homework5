@@ -36,5 +36,6 @@ root@s1:~# date; systemctl stop ntp; ntpdate -q s4; systemctl start ntp; date;
 ```
 ### Health check all the servers in real-time
     1. Start-up a daemon which will ping those machines and write result to local log.
-    2. install and start Consul on each S{i} node and have the status check buildin.
+    2. install and start Consul on each S{i} node and have the status check buildin. ^_^
+    checkout ./start_consul.sh
 
