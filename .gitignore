@@ -1,5 +1,9 @@
 .vagrant/*
+.idea/*
+__pycache__/*
 s1/
 s2/
 s3/
 s4/
+consul.d/
+consul/
