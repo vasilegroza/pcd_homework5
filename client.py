@@ -6,16 +6,9 @@ import datetime
 import argparse
 
 
-parser = argparse.ArgumentParser()
 
-parser.add_argument("client_type", type=str,
-                    help="please provide client type  normal/proxy")
-parser.add_argument("endpoint",
-                    help="please input the target hostname so we know where to send tcp packag")
 
-args = parser.parse_args()
-
-HOST, PORT = args.endpoint, 9999
+HOST, PORT = 's2', 80
 
 BUFFER_SIZE = 1214
 # to do
@@ -33,7 +26,6 @@ def do_delay_metric():
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, 32)
     now = time.time()
     date = datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d %H:%M:%S.%f")
-    print(date)
     package = pack('c26s',b'd',date.encode())
     print(package)
     try:
