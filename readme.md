@@ -32,7 +32,15 @@ S1 generates TCP package and sends it to the S4 via S2 and S3
 - manual sync with 
 
 ```sh
-root@s1:~# date; systemctl stop ntp; ntpdate -q s4; systemctl start ntp; date;
+root@s1:~#  date; sudo systemctl stop ntp; sudo ntpdate -s s4; sudo systemctl start ntp; date;
+
+date; sudo systemctl stop ntp; sudo ntpdate -s 0.ro.pool.ntp.org; sudo systemctl start ntp; date;
+```
+- ntp issues
+    https://access.redhat.com/solutions/35640
+
+```sh 
+root@s1:~# date; sudo systemctl stop ntp ; sudo ntpd -qg; sudo systemctl start ntp; date
 ```
 ### Health check all the servers in real-time
     1. Start-up a daemon which will ping those machines and write result to local log.

@@ -5,8 +5,10 @@ $script = <<SCRIPT
 echo "Installing dependencies ..."
 sudo apt-get update
 sudo apt-get install -y unzip curl jq dnsutils
+sudo timedatectl set-ntp no
 sudo apt-get install -y ntp
 sudo apt-get install -y ntpdate
+sudo apt-get install -y ntpstat
 echo "Determining Consul version to install ..."
 CHECKPOINT_URL="https://checkpoint-api.hashicorp.com/v1/check"
 if [ -z "$CONSUL_DEMO_VERSION" ]; then
@@ -30,6 +32,7 @@ SCRIPT
 
 $script_s1 = <<SCRIPT
 sudo echo 'export MY_IP=172.20.20.10' >> /home/vagrant/.profile
+source /home/vagrant/.profile
 sudo /sbin/setcap 'cap_net_bind_service=ep' /usr/bin/python3.5
 sudo sed -i '$ a 172.20.20.11 s2' /etc/hosts
 sudo sed -i '$ a 172.20.20.12 s3' /etc/hosts
@@ -41,6 +44,7 @@ SCRIPT
 
 $script_s2 = <<SCRIPT
 sudo echo 'export MY_IP=172.20.20.11' >> /home/vagrant/.profile
+source /home/vagrant/.profile
 sudo /sbin/setcap 'cap_net_bind_service=ep' /usr/bin/python3.5
 sudo sed -i '$ a 172.20.20.10 s1' /etc/hosts
 sudo sed -i '$ a 172.20.20.12 s3' /etc/hosts
@@ -48,12 +52,12 @@ sudo sed -i '$ a 172.20.20.13 s4' /etc/hosts
 sudo echo yes | sudo cp /vagrant/ntp.conf /etc/
 sudo /etc/init.d/ntp restart
 consul agent -data-dir=/tmp/consul -node=agent-two -bind=172.20.20.11 -enable-script-checks=true -config-dir=/etc/consul.d > ./consul_agent.log &
-python3.5 /vagrant/server.py proxy -proxy_pass=s3 -proxy_port=80 > server.log &
-
+nohup python3.5 -u /vagrant/server.py proxy -proxy_pass=s3 -proxy_port=80 > /vagrant/s2/server.log 2>&1 &
 SCRIPT
 
 $script_s3 = <<SCRIPT
 sudo echo 'export MY_IP=172.20.20.12' >> /home/vagrant/.profile
+source /home/vagrant/.profile
 sudo /sbin/setcap 'cap_net_bind_service=ep' /usr/bin/python3.5
 sudo sed -i '$ a 172.20.20.10 s1' /etc/hosts
 sudo sed -i '$ a 172.20.20.11 s2' /etc/hosts
@@ -61,11 +65,15 @@ sudo sed -i '$ a 172.20.20.13 s4' /etc/hosts
 sudo echo yes | sudo cp /vagrant/ntp.conf /etc/
 sudo /etc/init.d/ntp restart
 consul agent -data-dir=/tmp/consul -node=agent-three -bind=172.20.20.12 -enable-script-checks=true -config-dir=/etc/consul.d > ./consul_agent.log &
-python3.5 /vagrant/server.py proxy -proxy_pass=s4 -proxy_port=80 > server.log &
+nohup python3.5 -u /vagrant/server.py proxy -proxy_pass=s4 -proxy_port=80 > /vagrant/s3/server.log &
+
 SCRIPT
 
 $script_s4 = <<SCRIPT
 sudo echo 'export MY_IP=172.20.20.13' >> /home/vagrant/.profile
+source /home/vagrant/.profile
+sudo echo yes | sudo cp /vagrant/ntp_server.conf /etc/ntp.conf
+sudo /etc/init.d/ntp restart
 sudo /sbin/setcap 'cap_net_bind_service=ep' /usr/bin/python3.5
 sudo sed -i '$ a 172.20.20.10 s1' /etc/hosts
 sudo sed -i '$ a 172.20.20.11 s2' /etc/hosts
@@ -81,7 +89,7 @@ sudo echo yes | sudo cp /vagrant/mysqld.cnf /etc/mysql/mysql.conf.d/mysqld.cnf
 sudo systemctl restart mysql
 sudo cat /vagrant/init_db.sql | mysql -u root --password=${MSQL_ROOT_PASSWORD} 
 consul agent -data-dir=/tmp/consul -node=agent-four -bind=172.20.20.13 -enable-script-checks=true -config-dir=/etc/consul.d > ./consul_agent.log &
-python3 /vagrant/server.py final > server.log &
+nohup python3 -u /vagrant/server.py final > /vagrant/s4/server.log &
 
 SCRIPT
 # Specify a Consul version

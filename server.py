@@ -53,41 +53,66 @@ class TCPHandler(socketserver.StreamRequestHandler):
     def handle_delay_request(self, data):
         time1 = datetime.datetime.now()
         char, t0 = unpack('c26s', data)
-        # print(t0)
         time0 = datetime.datetime.strptime(t0.decode(), "%Y-%m-%d %H:%M:%S.%f")
         diff = time1 - time0
-        # print(time0)
-        # print(time1)
-        print(diff.days, diff.seconds, diff.microseconds)
-        delay_ms = (diff.days * 86400000) + (diff.seconds * 1000) + (diff.microseconds / 1000)
+        print("RTT")
+        delay_ms = (diff.days * 86400000) + \
+            (diff.seconds * 1000) + (diff.microseconds / 1000)
         # store client_ip, my_ip, delay_ms
         store_metric_to_db('delay', self.client_address[0], MY_IP, delay_ms)
-        print(args.server_type)
         if args.server_type == 'final':
             pass
         else:
-            # to do: 
-            # forward request
-            
             print('forward the request to ', args.proxy_pass)
             do_proxy_delay_metric(args.proxy_pass, int(args.proxy_port))
-            pass
 
     def handle_rtt_request(self, data):
+        char = unpack('c', data)
+        package = pack('c', b'r')
+        print("RTT")
+        self.request.send(package)
+        if args.server_type == 'final':
+            pass
+        else:
+            print('forward the request to ', args.proxy_pass)
+            do_proxy_rtt_metric(args.proxy_pass, int(args.proxy_port))
+            pass
         pass
+
 
 def do_proxy_delay_metric(host, port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, 32)
     now = time.time()
-    date = datetime.datetime.fromtimestamp(now).strftime("%Y-%m-%d %H:%M:%S.%f")
-    package = pack('c26s',b'd',date.encode())
+    date = datetime.datetime.fromtimestamp(
+        now).strftime("%Y-%m-%d %H:%M:%S.%f")
+    package = pack('c26s', b'd', date.encode())
     print(package)
     try:
         sock.connect((host, port))
         sock.send(package)
     finally:
         print('close socket')
+        sock.close()
+
+
+def do_proxy_rtt_metric(host, port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, 32)
+    time0 = datetime.datetime.now()
+    package = pack('c', b'r')
+    try:
+        sock.connect((host, port))
+        sock.send(package)
+        data = sock.recv(BUFFER_SIZE)
+        char = unpack('c', data)
+        time1 = datetime.datetime.now()
+        print("RTT")
+        diff = time1-time0
+        rtt_ms = (diff.days * 86400000) + (diff.seconds * 1000) + \
+            (diff.microseconds / 1000)
+        store_metric_to_db('rtt', MY_IP, host, rtt_ms)
+    finally:
         sock.close()
 
 
